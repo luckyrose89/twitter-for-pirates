@@ -23,6 +23,14 @@
       *:after {
         box-sizing: border-box;
       }
+
+      .skwak {
+        margin-bottom: 1rem;
+      }
+
+      .skwak-date {
+        font-size: 0.8rem;
+      }
     </style>
   </head>
 
@@ -33,6 +41,78 @@
 
     <script>
       // Your code goes here...
+      // Select the app container
+      var app = document.querySelector("#app");
+
+      /*!
+       * Sanitize and encode all HTML in a user-submitted string
+       * (c) 2018 Chris Ferdinandi, MIT License, https://gomakethings.com
+       * @param  {String} str  The user-submitted string
+       * @return {String} str  The sanitized string
+       */
+      var sanitizeHTML = function(str) {
+        var temp = document.createElement("div");
+        temp.textContent = str;
+        return temp.innerHTML;
+      };
+
+      // Render empty div if ther's no response from API
+      var renderNoResponse = function() {
+        app.innerHTML = "<p>Sorry matey! No skwaks at this time. Arr...</p>";
+      };
+
+      // Render data from api to app container
+      var renderResponse = function(data) {
+        // check if skwaks array is empty
+        if (data.skwaks.length < 1) {
+          renderNoResponse();
+          return;
+        }
+
+        app.innerHTML =
+          "<h1>" +
+          sanitizeHTML(data.username) +
+          "'s skwaks</h1>" +
+          '<div class="skwaks">' +
+          data.skwaks
+            .map(function(skwak) {
+              var html =
+                '<article class="skwak">' +
+                '<a class="skwak-date" href="' +
+                sanitizeHTML(skwak.url) +
+                '">' +
+                sanitizeHTML(skwak.date) +
+                "</a>" +
+                '<div class="skwak-content">' +
+                sanitizeHTML(skwak.content) +
+                "</div>" +
+                "</article>";
+              return html;
+            })
+            .join("") +
+          "</div>" +
+          "<p><em>Powered by " +
+          sanitizeHTML(data.service) +
+          "</em></p>";
+      };
+
+      // Request the API for data
+      fetch("https://vanillajsguides.com/api/skwak.json")
+        .then(function(response) {
+          if (response.ok) {
+            return response.json();
+          }
+
+          return Promise.reject();
+        })
+        .then(function(data) {
+          console.log(data);
+          renderResponse(data);
+        })
+        .catch(function(error) {
+          console.log("Something went wrong", error);
+          renderNoResponse();
+        });
     </script>
   </body>
 </html>
